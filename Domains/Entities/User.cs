@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.Text.Json.Serialization;
 
 namespace MyProject.Domain
 {
@@ -7,6 +7,7 @@ namespace MyProject.Domain
         public int Id { get; set; }
         public string Username { get; set; }
         public string Email { get; set; }
+        [JsonIgnore]
         public string PasswordHash { get; set; }
         public DateTime? DateOfBirth { get; set; }
         public bool IsActive { get; set; } = true;

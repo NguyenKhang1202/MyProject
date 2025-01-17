@@ -4,8 +4,9 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using MyProject.Context;
 using MyProject.Domain;
-using MyProject.Filters;
+using MyProject.Domain.Emails;
 using MyProject.Repos;
+using MyProject.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
@@ -20,7 +21,7 @@ builder.Services.AddControllers(options =>
 //         opt.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
 //         opt.SerializerSettings.NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore;
 //     });
-
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -58,6 +59,7 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddDbContext<MyDbContext>();
 builder.Services.AddAutoMapper(typeof(Program).Assembly);
 builder.Services.AddScoped<IUserRepo, UserRepo>();
+builder.Services.AddScoped<EmailService>();
 
 #region JWT Authorization
 
