@@ -21,7 +21,7 @@ public static class Generator
         return new string(Enumerable.Repeat<string>("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", 50).Select<string, char>((Func<string, char>) (s => s[random.Next(s.Length)])).ToArray<char>());
     }
     
-    public static string GenerateJwtToken(string username, IConfiguration configuration)
+    public static string GenerateJwtToken(User user, IConfiguration configuration)
     {
         var jwtKey = configuration.GetSection("Jwt").Get<JwtKeys>();
         var key = Encoding.UTF8.GetBytes(jwtKey?.Secret);
@@ -30,7 +30,9 @@ public static class Generator
 
         var claims = new[]
         {
-            new Claim(ClaimTypes.Name, username),
+            new Claim(ClaimTypes.Name, user.Username),
+            new Claim(ClaimTypes.Email, user.Email),
+            new Claim("UserId", user.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 
@@ -44,5 +46,22 @@ public static class Generator
             signingCredentials: signingCredentials);
 
         return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+    
+    public static string GenerateVerificationCode(int length = 6)
+    {
+        if (length <= 0) throw new ArgumentException("Length must be greater than zero.");
+
+        const string characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        var random = new Random();
+        var codeBuilder = new StringBuilder();
+
+        for (int i = 0; i < length; i++)
+        {
+            var index = random.Next(characters.Length);
+            codeBuilder.Append(characters[index]);
+        }
+
+        return codeBuilder.ToString();
     }
 }

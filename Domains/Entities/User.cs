@@ -11,5 +11,8 @@ namespace MyProject.Domain
         public string PasswordHash { get; set; }
         public DateTime? DateOfBirth { get; set; }
         public bool IsActive { get; set; } = true;
+        public bool IsVerified { get; set; } = false;
+        
+        public virtual ICollection<VerificationCode> VerificationCodes { get; set; }
     }
 }

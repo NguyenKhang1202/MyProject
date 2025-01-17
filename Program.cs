@@ -56,10 +56,14 @@ builder.Services.AddSwaggerGen(options =>
     options.AddSecurityRequirement(securityRequirements);
     // options.OperationFilter<AddAuthHeaderOperationFilter>();
 });
+builder.Services.AddHttpContextAccessor();
+
 builder.Services.AddDbContext<MyDbContext>();
 builder.Services.AddAutoMapper(typeof(Program).Assembly);
 builder.Services.AddScoped<IUserRepo, UserRepo>();
+builder.Services.AddScoped<IVerificationCodeRepo, VerificationCodeRepo>();
 builder.Services.AddScoped<EmailService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 #region JWT Authorization
 
