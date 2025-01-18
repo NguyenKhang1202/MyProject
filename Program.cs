@@ -5,6 +5,7 @@ using Microsoft.OpenApi.Models;
 using MyProject.Context;
 using MyProject.Domain;
 using MyProject.Domain.Emails;
+using MyProject.Quartz;
 using MyProject.Repos;
 using MyProject.Services;
 
@@ -64,6 +65,13 @@ builder.Services.AddScoped<IUserRepo, UserRepo>();
 builder.Services.AddScoped<IVerificationCodeRepo, VerificationCodeRepo>();
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+
+#region Quartz
+
+builder.Services.AddQuartzJobs();
+builder.Services.AddScoped<VerificationCodeCleanupJob>();
+
+#endregion
 
 #region JWT Authorization
 

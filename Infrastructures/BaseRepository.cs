@@ -45,6 +45,11 @@ public class BaseRepository<T>(DbContext context) : IRepository<T>
         _dbSet.Remove(entity);
     }
     
+    public void DeleteMany(ICollection<T> entities)
+    {
+        _dbSet.RemoveRange(entities);
+    }
+    
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         await context.SaveChangesAsync(cancellationToken);
