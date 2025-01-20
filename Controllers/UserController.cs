@@ -6,13 +6,14 @@ using MyProject.Domain;
 using MyProject.Domain.Dtos;
 using MyProject.Helpers;
 using MyProject.Repos;
+using MyProject.Services;
 
 namespace MyProject.Controllers;
 
 [Authorize]
 [ApiController]
 [Route("api/[controller]")]
-public class UserController(ILogger<UserController> logger, IUserRepo userRepo, IMapper mapper) : ControllerBase
+public class UserController(ILogger<UserController> logger, IUserService userService) : ControllerBase
 {
     private readonly ILogger<UserController> _logger = logger;
 
@@ -24,7 +25,7 @@ public class UserController(ILogger<UserController> logger, IUserRepo userRepo, 
     {
         return await ControllerHelper.TryCatchAsync(this, "Get", async () =>
         {
-            var result = await userRepo.Where(x => x.Id == userId).FirstOrDefaultAsync();
+            var result = await userService.GetById(userId);
             return Ok(result);
         });
     }
@@ -33,23 +34,17 @@ public class UserController(ILogger<UserController> logger, IUserRepo userRepo, 
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> UpdateUser(int id, [FromBody] UpdateUserDto dto)
+    public async Task<IActionResult> Update(int id, [FromBody] UpdateUserDto dto)
     {
-        var user = await userRepo.FirstOrDefaultAsync(x => x.Id == id);
-        if (user == null)
+        return await ControllerHelper.TryCatchAsync(this, "Update", async () =>
         {
-            return NotFound($"User with ID {id} not found.");
-        }
+            var errors = await userService.Update(id, dto);
+            if (errors.Count != 0)
+            {
+                return BadRequest(errors);
+            }
 
-        mapper.Map(dto, user);
-
-        userRepo.Update(user);
-        await userRepo.SaveChangesAsync();
-
-        return Ok(new
-        {
-            Message = "User updated successfully.",
-            User = user
+            return Ok();
         });
     }
 }
