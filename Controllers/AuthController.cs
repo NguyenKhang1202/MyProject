@@ -33,7 +33,14 @@ public class AuthController(IConfiguration configuration, IUserRepo userRepo, IA
         }
         
         var token = Generator.GenerateJwtToken(user, configuration);
-        return Ok(new { Token = token });
+        return Ok(new LoginResponseDto()
+        {
+            Token = token,
+            UserId = user.Id,
+            Username = user.Username,
+            Email = user.Email,
+            DateOfBirth = user.DateOfBirth
+        });
     }
     
     [HttpPost("register")]
@@ -51,12 +58,12 @@ public class AuthController(IConfiguration configuration, IUserRepo userRepo, IA
     [HttpPost("verify-code")]
     public async Task<IActionResult> VerifyCode(string code, string email)
     {
-        var errors = await authService.VerifyCodeAsync(code, email);
-        if (errors.Count != 0)
+        var result = await authService.VerifyCodeAsync(code, email);
+        if (result.IsSuccess == false)
         {
-            return BadRequest(errors);
+            return BadRequest(result.ErrorMessages);
         }
-        
-        return Ok("Verify successfully.");
+
+        return Ok(result.Data);
     }
 }

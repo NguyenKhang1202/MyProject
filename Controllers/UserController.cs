@@ -26,7 +26,11 @@ public class UserController(ILogger<UserController> logger, IUserService userSer
         return await ControllerHelper.TryCatchAsync(this, "Get", async () =>
         {
             var result = await userService.GetById(userId);
-            return Ok(result);
+            if (result.IsSuccess == false)
+            {
+                return BadRequest(result.ErrorMessages);
+            }
+            return Ok(result.Data);
         });
     }
     
@@ -38,13 +42,13 @@ public class UserController(ILogger<UserController> logger, IUserService userSer
     {
         return await ControllerHelper.TryCatchAsync(this, "Update", async () =>
         {
-            var errors = await userService.Update(id, dto);
-            if (errors.Count != 0)
+            var result = await userService.Update(id, dto);
+            if (result.IsSuccess == false)
             {
-                return BadRequest(errors);
+                return BadRequest(result.ErrorMessages);
             }
 
-            return Ok();
+            return Ok(result.Data);
         });
     }
 }

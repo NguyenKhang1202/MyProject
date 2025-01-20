@@ -1,5 +1,6 @@
 ﻿using MyProject.Context;
 using MyProject.Domain;
+using MyProject.Domain.ApiResponses;
 using MyProject.Domain.Dtos.Auths;
 using MyProject.Domain.Emails;
 using MyProject.Domain.ErrorHandling;
@@ -11,7 +12,7 @@ namespace MyProject.Services;
 public interface IAuthService
 {
     Task<List<ErrorMessage>> Register(RegisterRequest registerRequest);
-    Task<List<ErrorMessage>> VerifyCodeAsync(string code, string email);
+    Task<ApiResponse<RegisterResponseDto>> VerifyCodeAsync(string code, string email);
     Task<object> SignIn(LoginRequest loginRequest);
 }
 
@@ -108,7 +109,7 @@ public class AuthService(
         await verificationCodeRepo.AddAsync(verificationCode);
     }
     
-    public async Task<List<ErrorMessage>> VerifyCodeAsync(string code, string email)
+    public async Task<ApiResponse<RegisterResponseDto>> VerifyCodeAsync(string code, string email)
     {
         var errors = new List<ErrorMessage>();
         var user = await userRepo.FirstOrDefaultAsync(x => x.Email == email);
@@ -144,9 +145,17 @@ public class AuthService(
             user!.IsVerified = true;
             userRepo.Update(user);
             await verificationCodeRepo.SaveChangesAsync();
+            return ApiResponse<RegisterResponseDto>.Success(new RegisterResponseDto()
+            {
+                Token = Generator.GenerateJwtToken(user, configuration),
+                UserId = user.Id,
+                Username = user.Username,
+                Email = user.Email,
+                DateOfBirth = user.DateOfBirth
+            });
         }
         
-        return errors;
+        return ApiResponse<RegisterResponseDto>.Fail(errors);
     }
 
     private string? GetTokenClaimValue(string claimType)
