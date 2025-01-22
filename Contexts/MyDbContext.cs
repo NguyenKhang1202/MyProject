@@ -14,8 +14,8 @@ public class MyDbContext(DbContextOptions<MyDbContext> options, IConfiguration c
         modelBuilder.Entity<User>(entity =>
         {
             entity.ToTable("users");
-            entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP").HasColumnName("created_at");
-            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP").HasColumnName("updated_at");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP(6)").HasColumnName("CreatedAt");
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP(6)").HasColumnName("UpdatedAt");
             entity.Property(e => e.Username).HasMaxLength(50);
             entity.Property(e => e.Email).HasMaxLength(100);
             entity.Property(e => e.PasswordHash).HasMaxLength(255).HasColumnName("password_hash");
