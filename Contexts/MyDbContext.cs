@@ -7,6 +7,7 @@ public class MyDbContext(DbContextOptions<MyDbContext> options, IConfiguration c
 {
     public DbSet<User> Users { get; set; }
     public DbSet<VerificationCode> VerificationCodes { get; set; }
+    public DbSet<ExternalLogin> ExternalLogins { get; set; }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -19,6 +20,11 @@ public class MyDbContext(DbContextOptions<MyDbContext> options, IConfiguration c
             entity.Property(e => e.Username).HasMaxLength(50);
             entity.Property(e => e.Email).HasMaxLength(100);
             entity.Property(e => e.PasswordHash).HasMaxLength(255).HasColumnName("password_hash");
+        });
+        
+        modelBuilder.Entity<ExternalLogin>(entity =>
+        {
+            entity.ToTable("ExternalLogins");
         });
         
         modelBuilder.ApplyConfiguration(new VerificationCodeConfiguration());
