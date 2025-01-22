@@ -18,9 +18,16 @@ public class VerificationCodeConfiguration : IEntityTypeConfiguration<Verificati
 
         builder.Property(vc => vc.ExpiresAt)
             .IsRequired();
+        
+        // builder.Property(vc => vc.TestMigrations)
+        //     .HasMaxLength(10)
+        //     .IsUnicode();
 
         builder.Property(vc => vc.CreatedAt)
-            .HasDefaultValueSql("GETDATE()"); // Mặc định thời gian tạo là hiện tại
+            .HasDefaultValueSql("CURRENT_TIMESTAMP(6)"); // Mặc định thời gian tạo là hiện tại
+
+        builder.Property(vc => vc.UpdatedAt)
+            .HasDefaultValueSql("CURRENT_TIMESTAMP(6)");
 
         builder.Property(vc => vc.IsUsed)
             .HasDefaultValue(false); // Mặc định là chưa sử dụng

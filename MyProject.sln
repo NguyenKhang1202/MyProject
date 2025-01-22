@@ -4,7 +4,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyProject", "MyProject.cspr
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{2ED0661A-50FD-41C6-9E16-7FDBDD0CEE2B}"
 	ProjectSection(SolutionItems) = preProject
-		docker-compose.yml = docker-compose.yml
+		docker-compose-db.yml = docker-compose-db.yml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docker", "Docker", "{374AEDFE-9BD2-4C99-AF85-B08D2092C1E5}"
+	ProjectSection(SolutionItems) = preProject
+		docker-compose-db.yml = docker-compose-db.yml
 	EndProjectSection
 EndProject
 Global
@@ -17,5 +22,8 @@ Global
 		{C4F42521-C4D6-44A2-B103-6EA17AB5AED6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C4F42521-C4D6-44A2-B103-6EA17AB5AED6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C4F42521-C4D6-44A2-B103-6EA17AB5AED6}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{374AEDFE-9BD2-4C99-AF85-B08D2092C1E5} = {2ED0661A-50FD-41C6-9E16-7FDBDD0CEE2B}
 	EndGlobalSection
 EndGlobal
