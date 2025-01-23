@@ -17,34 +17,15 @@ public class AuthController(IConfiguration configuration, IUserRepo userRepo, IA
     [HttpPost("signin")]
     public async Task<IActionResult> SignIn([FromBody] LoginRequest loginRequest)
     {
-        var user = await userRepo.FirstOrDefaultAsync(x => x.Username == loginRequest.Username);
-        if (user == null)
+        var result = await authService.SignIn(loginRequest);
+        if (result.IsSuccess is false)
         {
-            return Unauthorized("Invalid username or password.");
+            return BadRequest(result.ErrorMessages);
         }
 
-        if (user.IsVerified is false)
-        {
-            return Unauthorized("User is not verified.");
-        }
-        
-        bool verifyPassword = Crypto.VerifyPassword(loginRequest.Password, user.PasswordHash);
-        if (!verifyPassword)
-        {
-            return Unauthorized("Invalid username or password.");
-        }
-        
-        var token = Generator.GenerateJwtToken(user, configuration);
-        return Ok(new LoginResponseDto()
-        {
-            Token = token,
-            UserId = user.Id,
-            Username = user.Username,
-            Email = user.Email,
-            DateOfBirth = user.DateOfBirth
-        });
+        return Ok(result.Data);
     }
-    
+
     [HttpGet("login-github")]
     public async Task<IActionResult> SignInGithub()
     {
@@ -52,7 +33,7 @@ public class AuthController(IConfiguration configuration, IUserRepo userRepo, IA
         var redirectUrl = Url.Action(nameof(Callback), "Auth");
         return Challenge(new AuthenticationProperties { RedirectUri = redirectUrl }, "GitHub");
     }
-    
+
     [HttpGet("signin-github")]
     public async Task<IActionResult> Callback()
     {
@@ -63,25 +44,16 @@ public class AuthController(IConfiguration configuration, IUserRepo userRepo, IA
         {
             return Unauthorized(new { message = "Authentication failed" });
         }
-
-        // Retrieve user claims
-        var claims = authenticateResult.Principal.Claims.Select(c => new
-        {
-            c.Type,
-            c.Value
-        });
         
-        var login = authenticateResult.Principal.FindFirst("login")?.Value;
         var email = authenticateResult.Principal.FindFirst("email")?.Value;
-
         var user = await userRepo.FirstOrDefaultAsync(x => x.Email == email);
         if (user == null)
         {
             await using var transaction = await myDbContext.Database.BeginTransactionAsync();
             user = new User
             {
-                Username = login,
-                Email = email,
+                Username = authenticateResult.Principal.FindFirst("login")?.Value!,
+                Email = email!,
                 IsVerified = true,
                 IsActive = true,
             };
@@ -138,7 +110,7 @@ public class AuthController(IConfiguration configuration, IUserRepo userRepo, IA
     public async Task<IActionResult> VerifyCode(string code, string email)
     {
         var result = await authService.VerifyCodeAsync(code, email);
-        if (result.IsSuccess == false)
+        if (result.IsSuccess is false)
         {
             return BadRequest(result.ErrorMessages);
         }

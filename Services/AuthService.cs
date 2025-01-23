@@ -13,7 +13,7 @@ public interface IAuthService
 {
     Task<List<ErrorMessage>> Register(RegisterRequest registerRequest);
     Task<ApiResponse<RegisterResponseDto>> VerifyCodeAsync(string code, string email);
-    Task<object> SignIn(LoginRequest loginRequest);
+    Task<ApiResponse<LoginResponseDto>> SignIn(LoginRequest loginRequest);
 }
 
 public class AuthService(
@@ -24,7 +24,7 @@ public class AuthService(
     IConfiguration configuration,
     MyDbContext dbContext): IAuthService
 {
-    public async Task<object> SignIn(LoginRequest loginRequest)
+    public async Task<ApiResponse<LoginResponseDto>> SignIn(LoginRequest loginRequest)
     {
         var errors = new List<ErrorMessage>();
         var user = await userRepo.FirstOrDefaultAsync(x => x.Username == loginRequest.Username);
@@ -33,26 +33,41 @@ public class AuthService(
             errors.Add(new ErrorMessage()
             {
                 Code = 400,
-                Message = "Invalid username or password."
+                Message = "Username not found"
             });
+            return ApiResponse<LoginResponseDto>.Fail(errors);
         }
-        bool verifyPassword = Crypto.VerifyPassword(loginRequest.Password, user.PasswordHash);
-        if (!verifyPassword)
+
+        if (user.IsVerified is false)
         {
             errors.Add(new ErrorMessage()
             {
                 Code = 400,
-                Message = "Invalid username or password."
+                Message = "User is not verified."
             });
+            return ApiResponse<LoginResponseDto>.Fail(errors);
         }
-
-        if (errors.Count == 0)
+        
+        bool verifyPassword = Crypto.VerifyPassword(loginRequest.Password, user.PasswordHash!);
+        if (verifyPassword is false)
         {
-            var token = Generator.GenerateJwtToken(user, configuration);
-            return new { Token = token };
+            errors.Add(new ErrorMessage()
+            {
+                Code = 400,
+                Message = "Password incorrect"
+            });
+            return ApiResponse<LoginResponseDto>.Fail(errors);
         }
-
-        return errors;
+        
+        var token = Generator.GenerateJwtToken(user, configuration);
+        return ApiResponse<LoginResponseDto>.Success(new LoginResponseDto()
+        {
+            Token = token,
+            UserId = user.Id,
+            Username = user.Username,
+            Email = user.Email,
+            DateOfBirth = user.DateOfBirth
+        });
     }
     public async Task<List<ErrorMessage>> Register(RegisterRequest registerRequest)
     {
@@ -120,6 +135,7 @@ public class AuthService(
                 Code = 401,
                 Message = "User not found."
             });
+            return ApiResponse<RegisterResponseDto>.Fail(errors);
         }
         
         var verificationCode = await verificationCodeRepo
@@ -136,26 +152,23 @@ public class AuthService(
                 Code = 400,
                 Message = "Invalid verification code."
             });
+            return ApiResponse<RegisterResponseDto>.Fail(errors);
         }
 
-        if (errors.Count == 0)
+        if (errors.Count != 0) return ApiResponse<RegisterResponseDto>.Fail(errors);
+        verificationCode!.IsUsed = true;
+        verificationCodeRepo.Update(verificationCode);
+        user!.IsVerified = true;
+        userRepo.Update(user);
+        await verificationCodeRepo.SaveChangesAsync();
+        return ApiResponse<RegisterResponseDto>.Success(new RegisterResponseDto()
         {
-            verificationCode!.IsUsed = true;
-            verificationCodeRepo.Update(verificationCode);
-            user!.IsVerified = true;
-            userRepo.Update(user);
-            await verificationCodeRepo.SaveChangesAsync();
-            return ApiResponse<RegisterResponseDto>.Success(new RegisterResponseDto()
-            {
-                Token = Generator.GenerateJwtToken(user, configuration),
-                UserId = user.Id,
-                Username = user.Username,
-                Email = user.Email,
-                DateOfBirth = user.DateOfBirth
-            });
-        }
-        
-        return ApiResponse<RegisterResponseDto>.Fail(errors);
+            Token = Generator.GenerateJwtToken(user, configuration),
+            UserId = user.Id,
+            Username = user.Username,
+            Email = user.Email,
+            DateOfBirth = user.DateOfBirth
+        });
     }
 
     private string? GetTokenClaimValue(string claimType)
