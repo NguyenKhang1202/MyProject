@@ -10,7 +10,7 @@ public class BaseRepository<T>(DbContext context) : IRepository<T>
 {
     private readonly DbSet<T> _dbSet = context.Set<T>();
 
-    public async Task<IEnumerable<T>> GetAllAsync()
+    public async Task<ICollection<T>> GetAllAsync()
     {
         return await _dbSet.ToListAsync();
     }

@@ -12,6 +12,7 @@ using MyProject.Domain.OAuths;
 using MyProject.Quartz;
 using MyProject.Repos;
 using MyProject.Services;
+using MyProject.SignalR;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
@@ -28,6 +29,13 @@ builder.Services.AddControllers(options =>
 //     });
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddEndpointsApiExplorer();
+
+#region SignalR
+
+builder.Services.AddSignalR();
+
+#endregion
+
 builder.Services.AddSwaggerGen(options =>
 {
     // options.OperationFilter<AddResponseHeadersFilter>();
@@ -68,9 +76,13 @@ builder.Services.AddAutoMapper(typeof(Program).Assembly);
 builder.Services.AddScoped<IUserRepo, UserRepo>();
 builder.Services.AddScoped<IVerificationCodeRepo, VerificationCodeRepo>();
 builder.Services.AddScoped<IExternalLoginRepo, ExternalLoginRepo>();
+builder.Services.AddScoped<IChatRoomRepo, ChatRoomRepo>();
+builder.Services.AddScoped<IMessageRepo, MessageRepo>();
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IMessageService, MessageService>();
+builder.Services.AddScoped<IChatRoomService, ChatRoomService>();
 
 #region Quartz
 
@@ -184,6 +196,8 @@ builder.Services.AddAuthorization();
 #endregion
 
 var app = builder.Build();
+
+app.MapHub<ChatHub>("/chatHub");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

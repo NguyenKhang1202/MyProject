@@ -8,6 +8,8 @@ public class MyDbContext(DbContextOptions<MyDbContext> options, IConfiguration c
     public DbSet<User> Users { get; set; }
     public DbSet<VerificationCode> VerificationCodes { get; set; }
     public DbSet<ExternalLogin> ExternalLogins { get; set; }
+    public DbSet<ChatRoom> ChatRooms { get; set; }
+    public DbSet<Message> Messages { get; set; }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -25,6 +27,16 @@ public class MyDbContext(DbContextOptions<MyDbContext> options, IConfiguration c
         modelBuilder.Entity<ExternalLogin>(entity =>
         {
             entity.ToTable("ExternalLogins");
+        });
+        
+        modelBuilder.Entity<ChatRoom>(entity =>
+        {
+            entity.ToTable("ChatRooms");
+        });
+        
+        modelBuilder.Entity<Message>(entity =>
+        {
+            entity.ToTable("Messages");
         });
         
         modelBuilder.ApplyConfiguration(new VerificationCodeConfiguration());

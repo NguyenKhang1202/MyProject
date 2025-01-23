@@ -17,13 +17,16 @@ public class AuthController(IConfiguration configuration, IUserRepo userRepo, IA
     [HttpPost("signin")]
     public async Task<IActionResult> SignIn([FromBody] LoginRequest loginRequest)
     {
-        var result = await authService.SignIn(loginRequest);
-        if (result.IsSuccess is false)
+        return await ControllerHelper.TryCatchAsync(this, "SignIn", async () =>
         {
-            return BadRequest(result.ErrorMessages);
-        }
+            var result = await authService.SignIn(loginRequest);
+            if (result.IsSuccess is false)
+            {
+                return BadRequest(result.ErrorMessages);
+            }
 
-        return Ok(result.Data);
+            return Ok(result.Data);
+        });
     }
 
     [HttpGet("login-github")]
@@ -97,24 +100,30 @@ public class AuthController(IConfiguration configuration, IUserRepo userRepo, IA
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest registerRequest)
     {
-        var errors = await authService.Register(registerRequest);
-        if (errors.Count != 0)
+        return await ControllerHelper.TryCatchAsync(this, "Register", async () =>
         {
-            return BadRequest(errors);
-        }
-        
-        return Ok("User registered successfully.");
+            var errors = await authService.Register(registerRequest);
+            if (errors.Count != 0)
+            {
+                return BadRequest(errors);
+            }
+
+            return Ok("User registered successfully.");
+        });
     }
     
     [HttpPost("verify-code")]
     public async Task<IActionResult> VerifyCode(string code, string email)
     {
-        var result = await authService.VerifyCodeAsync(code, email);
-        if (result.IsSuccess is false)
+        return await ControllerHelper.TryCatchAsync(this, "VerifyCode", async () =>
         {
-            return BadRequest(result.ErrorMessages);
-        }
+            var result = await authService.VerifyCodeAsync(code, email);
+            if (result.IsSuccess is false)
+            {
+                return BadRequest(result.ErrorMessages);
+            }
 
-        return Ok(result.Data);
+            return Ok(result.Data);
+        });
     }
 }

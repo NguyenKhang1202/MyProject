@@ -4,7 +4,7 @@ namespace MyProject.Infrastructures;
 
 public interface IRepository<T> where T : class
 {
-    Task<IEnumerable<T>> GetAllAsync();
+    Task<ICollection<T>> GetAllAsync();
     Task<T?> GetByIdAsync(object id);
     Task<T?> FirstOrDefaultAsync(Func<T, bool> predicate);
     IQueryable<T> Where(Expression<Func<T, bool>> predicate);

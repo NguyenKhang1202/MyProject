@@ -14,6 +14,7 @@ public interface IAuthService
     Task<List<ErrorMessage>> Register(RegisterRequest registerRequest);
     Task<ApiResponse<RegisterResponseDto>> VerifyCodeAsync(string code, string email);
     Task<ApiResponse<LoginResponseDto>> SignIn(LoginRequest loginRequest);
+    string? GetTokenClaimValue(string claimType);
 }
 
 public class AuthService(
@@ -171,7 +172,7 @@ public class AuthService(
         });
     }
 
-    private string? GetTokenClaimValue(string claimType)
+    public string? GetTokenClaimValue(string claimType)
     {
         var currentUser = httpContext?.HttpContext?.User;
 

@@ -1,11 +1,8 @@
-using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using MyProject.Domain;
 using MyProject.Domain.Dtos;
 using MyProject.Helpers;
-using MyProject.Repos;
 using MyProject.Services;
 
 namespace MyProject.Controllers;
