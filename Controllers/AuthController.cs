@@ -110,21 +110,16 @@ public class AuthController(IConfiguration configuration, IUserRepo userRepo, IA
                 });
                 await externalLoginRepo.SaveChangesAsync();
             }
-            else
-            {
-                var token = Generator.GenerateJwtToken(user, configuration);
-                return Ok(new LoginResponseDto()
-                {
-                    Token = token,
-                    UserId = user.Id,
-                    Username = user.Username,
-                    Email = user.Email,
-                    DateOfBirth = user.DateOfBirth
-                });
-            }
         }
         
-        return Ok();
+        return Ok(new LoginResponseDto()
+        {
+            Token = Generator.GenerateJwtToken(user, configuration),
+            UserId = user.Id,
+            Username = user.Username,
+            Email = user.Email,
+            DateOfBirth = user.DateOfBirth
+        });
     }
     
     [HttpPost("register")]

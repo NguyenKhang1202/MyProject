@@ -90,9 +90,20 @@ var jwtKeys = jwtSection.Get<JwtKeys>();
 
 builder.Services.AddAuthentication(options =>
     {
-        options.DefaultAuthenticateScheme = "Cookies";
+        options.DefaultScheme = "DynamicScheme"; // Scheme động
         options.DefaultChallengeScheme = "GitHub";
         options.DefaultSignInScheme = "Cookies"; 
+    })
+    .AddPolicyScheme("DynamicScheme", "Dynamic Auth", options =>
+    {
+        options.ForwardDefaultSelector = context =>
+        {
+            // Kiểm tra header Authorization trước
+            if (context.Request.Headers.ContainsKey("Authorization"))
+                return JwtBearerDefaults.AuthenticationScheme;
+            // Nếu không, fallback về Cookies
+            return "Cookies";
+        };
     })
     .AddCookie("Cookies")
     .AddOAuth("GitHub", options =>
