@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using MyProject.Context;
 using MyProject.Domain;
+using MyProject.Domain.Elasticsearchs;
 using MyProject.Domain.Emails;
 using MyProject.Domain.OAuths;
 using MyProject.Quartz;
@@ -88,6 +89,14 @@ builder.Services.AddScoped<IChatRoomService, ChatRoomService>();
 
 builder.Services.AddQuartzJobs();
 builder.Services.AddScoped<VerificationCodeCleanupJob>();
+
+#endregion
+
+#region Elaticsearch
+
+var eConfigurationSection = configuration.GetSection("ElasticsearchSettings");
+builder.Services.Configure<ElasticsearchSettings>(eConfigurationSection);
+builder.Services.AddScoped<ElasticSearchService>();
 
 #endregion
 
