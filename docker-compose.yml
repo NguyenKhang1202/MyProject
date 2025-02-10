@@ -1,0 +1,17 @@
+﻿version: '3.8'
+
+services:
+  my-project:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: my-project
+    ports:
+      - "5079:5079"
+      - "7054:7054"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+    depends_on:
+      - db
+    networks:
+      - my_network
