@@ -14,6 +14,7 @@ using MyProject.Quartz;
 using MyProject.Repos;
 using MyProject.Services;
 using MyProject.SignalR;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
@@ -99,6 +100,21 @@ builder.Services.Configure<ElasticsearchSettings>(eConfigurationSection);
 builder.Services.AddScoped<ElasticSearchService>();
 
 #endregion
+
+#region log
+
+// 3. Cấu hình Serilog để ghi logs vào Console, File, và AWS CloudWatch
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console() // Ghi logs ra console
+    .WriteTo.File("logs/myapp.log", rollingInterval: RollingInterval.Day) // Ghi logs ra file
+    .Enrich.FromLogContext()
+    .CreateLogger();
+
+// 4. Thêm Serilog vào Logging của ASP.NET Core
+builder.Host.UseSerilog();
+
+#endregion
+
 
 #region JWT Authorization
 

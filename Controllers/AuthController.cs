@@ -12,13 +12,20 @@ namespace MyProject.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class AuthController(IConfiguration configuration, IUserRepo userRepo, IAuthService authService, IExternalLoginRepo externalLoginRepo, MyDbContext myDbContext) : ControllerBase
+public class AuthController(IConfiguration configuration, 
+    IUserRepo userRepo, 
+    IAuthService authService, 
+    IExternalLoginRepo externalLoginRepo, 
+    MyDbContext myDbContext,
+    ILogger<AuthController> logger) : ControllerBase
 {
     [HttpPost("signin")]
     public async Task<IActionResult> SignIn([FromBody] LoginRequest loginRequest)
     {
         return await ControllerHelper.TryCatchAsync(this, "SignIn", async () =>
         {
+            // example
+            logger.LogInformation($"{loginRequest.Username} is login");
             var result = await authService.SignIn(loginRequest);
             if (result.IsSuccess is false)
             {
