@@ -93,7 +93,7 @@ public class AuthController(IConfiguration configuration,
                 await externalLoginRepo.SaveChangesAsync();
             }
         }
-        
+
         return Ok(new LoginResponseDto()
         {
             Token = Generator.GenerateJwtToken(user, configuration),
@@ -103,7 +103,7 @@ public class AuthController(IConfiguration configuration,
             DateOfBirth = user.DateOfBirth
         });
     }
-    
+
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest registerRequest)
     {

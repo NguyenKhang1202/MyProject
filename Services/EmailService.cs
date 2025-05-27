@@ -13,7 +13,7 @@ public class EmailService(IOptions<EmailSettings> emailSettings)
         var email = new MimeMessage();
         email.From.Add(new MailboxAddress(_emailSettings.Name, _emailSettings.FromEmail));
         email.To.Add(new MailboxAddress("", request.ToEmail));
-        
+
         if (request.Cc.Count != 0)
         {
             foreach (var ccEmail in request.Cc)
@@ -39,7 +39,7 @@ public class EmailService(IOptions<EmailSettings> emailSettings)
         };
 
         using var smtp = new SmtpClient();
-        await smtp.ConnectAsync(_emailSettings.SmtpServer, _emailSettings.Port, MailKit.Security.SecureSocketOptions.StartTls);
+        await smtp.ConnectAsync(_emailSettings.SmtpServer, _emailSettings.Port, MailKit.Security.SecureSocketOptions.None);
         await smtp.AuthenticateAsync(_emailSettings.FromEmail, _emailSettings.Password);
         await smtp.SendAsync(email);
         await smtp.DisconnectAsync(true);
