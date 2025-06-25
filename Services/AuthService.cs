@@ -18,9 +18,9 @@ public interface IAuthService
 }
 
 public class AuthService(
-    IUserRepo userRepo, 
-    IVerificationCodeRepo verificationCodeRepo, 
-    EmailService emailService, 
+    IUserRepo userRepo,
+    IVerificationCodeRepo verificationCodeRepo,
+    EmailService emailService,
     IHttpContextAccessor httpContext,
     IConfiguration configuration,
     MyDbContext dbContext): IAuthService
@@ -99,7 +99,7 @@ public class AuthService(
             await userRepo.SaveChangesAsync();
             var verificationCode = Generator.GenerateVerificationCode();
             await CreateVerificationCodeAsync(user.Id, verificationCode, TimeSpan.FromMinutes(5));
-            await userRepo.SaveChangesAsync();
+            await dbContext.SaveChangesAsync();
             await transaction.CommitAsync();
             await emailService.SendEmailAsync(new EmailRequest
             {
