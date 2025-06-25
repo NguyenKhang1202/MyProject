@@ -125,7 +125,7 @@ builder.Services.Configure<JwtKeys>(jwtSection);
 // var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "YourIssuerHere";
 var jwtKeys = jwtSection.Get<JwtKeys>();
 
-builder.Services.AddAuthentication(options =>
+/*builder.Services.AddAuthentication(options =>
     {
         options.DefaultScheme = "DynamicScheme"; // Scheme động
         options.DefaultChallengeScheme = "GitHub";
@@ -215,6 +215,14 @@ builder.Services.AddAuthentication(options =>
             ValidAudience = "admin",
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKeys.Secret))
         };
+    });*/
+
+builder.Services.AddAuthentication("Bearer")
+    .AddJwtBearer("Bearer", options =>
+    {
+        options.Authority = "http://localhost:8080/realms/myrealm";
+        options.RequireHttpsMetadata = false;
+        options.Audience = "my-app";
     });
 
 builder.Services.AddAuthorization();
