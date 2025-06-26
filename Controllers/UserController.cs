@@ -18,6 +18,7 @@ public class UserController(ILogger<UserController> logger, IUserService userSer
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(User), StatusCodes.Status200OK)]
+    [Authorize(Roles = "admin")]
     public async Task<IActionResult> Get(int userId)
     {
         return await ControllerHelper.TryCatchAsync(this, "Get", async () =>

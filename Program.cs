@@ -9,6 +9,7 @@ using MyProject.Context;
 using MyProject.Domain;
 using MyProject.Domain.Elasticsearchs;
 using MyProject.Domain.Emails;
+using MyProject.Domain.Keycloaks;
 using MyProject.Domain.OAuths;
 using MyProject.Quartz;
 using MyProject.Repos;
@@ -115,114 +116,77 @@ builder.Host.UseSerilog();
 
 #endregion
 
-
 #region JWT Authorization
 
 var jwtSection = configuration.GetSection("Jwt");
 builder.Services.Configure<JwtKeys>(jwtSection);
-
-// var jwtKey = builder.Configuration["Jwt:Key"] ?? "YourSecretKeyHere";
-// var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "YourIssuerHere";
+builder.Services.Configure<KeycloakOptions>(builder.Configuration.GetSection("Authentication:Keycloak"));
+var keycloakSection = configuration.GetSection("Authentication:Keycloak");
+var keycloakOptions = keycloakSection.Get<KeycloakOptions>();
 var jwtKeys = jwtSection.Get<JwtKeys>();
 
-/*builder.Services.AddAuthentication(options =>
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
     {
-        options.DefaultScheme = "DynamicScheme"; // Scheme động
-        options.DefaultChallengeScheme = "GitHub";
-        options.DefaultSignInScheme = "Cookies"; 
-    })
-    .AddPolicyScheme("DynamicScheme", "Dynamic Auth", options =>
-    {
-        options.ForwardDefaultSelector = context =>
-        {
-            // Kiểm tra header Authorization trước
-            if (context.Request.Headers.ContainsKey("Authorization"))
-                return JwtBearerDefaults.AuthenticationScheme;
-            // Nếu không, fallback về Cookies
-            return "Cookies";
-        };
-    })
-    .AddCookie("Cookies")
-    .AddOAuth("GitHub", options =>
-    {
-        // Load settings from appsettings.json
-        var oAuthSettings = builder.Configuration.GetSection("OAuthSettings");
-        options.ClientId = oAuthSettings["ClientId"];
-        options.ClientSecret = oAuthSettings["ClientSecret"];
-        options.CallbackPath = oAuthSettings["CallbackPath"];
-
-        // Define endpoints
-        options.AuthorizationEndpoint = oAuthSettings["AuthorizationEndpoint"];
-        options.TokenEndpoint = oAuthSettings["TokenEndpoint"];
-        options.UserInformationEndpoint = oAuthSettings["UserInfoEndpoint"];
-
-        // Save tokens for authenticated sessions
-        options.SaveTokens = true;
-        
-        options.Scope.Add("read:user");  // Lấy thông tin cơ bản (bio, company, location, etc.)
-        options.Scope.Add("user:email");
-        
-        // Map user claims
-        options.ClaimActions.MapJsonKey("name", "name");
-        options.ClaimActions.MapJsonKey("email", "email");
-        options.ClaimActions.MapJsonKey("id", "id");
-        options.ClaimActions.MapJsonKey("login", "login");
-
-        options.Events = new OAuthEvents
-        {
-            OnCreatingTicket = async context =>
-            {
-                var request = new HttpRequestMessage(HttpMethod.Get, context.Options.UserInformationEndpoint);
-                request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", context.AccessToken);
-                var response = await context.Backchannel.SendAsync(request);
-
-                if (!response.IsSuccessStatusCode)
-                    throw new HttpRequestException($"Failed to retrieve user information ({response.StatusCode}).");
-
-                var user = System.Text.Json.JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-                context.RunClaimActions(user.RootElement);
-                
-                // email
-                var requestEmail = new HttpRequestMessage(HttpMethod.Get, "https://api.github.com/user/emails");
-                requestEmail.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", context.AccessToken);
-                var responseEmail = await context.Backchannel.SendAsync(requestEmail);
-                if (!responseEmail.IsSuccessStatusCode)
-                {
-                    throw new HttpRequestException($"Failed to retrieve emails ({response.StatusCode}): {await response.Content.ReadAsStringAsync()}");
-                }
-
-                var emailResponse = await responseEmail.Content.ReadAsStringAsync();
-                var emails = System.Text.Json.JsonSerializer.Deserialize<List<EmailGithub>>(emailResponse);
-
-                var primaryEmail = emails?.FirstOrDefault(e => e.Primary)?.Email;
-
-                if (!string.IsNullOrEmpty(primaryEmail))
-                {
-                    context.Identity?.AddClaim(new Claim("email", primaryEmail));
-                }
-            }
-        };
-    })
-    .AddJwtBearer(options =>
-    {
+        options.Authority = keycloakOptions?.Authority;
+        options.RequireHttpsMetadata = keycloakOptions!.RequireHttpsMetadata;
+        options.Audience = keycloakOptions.Audience;
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
             ValidateAudience = true,
             ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtKeys.Issuer,
-            ValidAudience = "admin",
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKeys.Secret))
+            RoleClaimType = ClaimTypes.Role
         };
-    });*/
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = context =>
+            {
+                var identity = context.Principal.Identity as ClaimsIdentity;
+                var realmAccessClaim = identity?.FindFirst("realm_access");
+                if (realmAccessClaim != null)
+                {
+                    var realmAccess = System.Text.Json.JsonDocument.Parse(realmAccessClaim.Value);
+                    if (realmAccess.RootElement.TryGetProperty("roles", out var roles))
+                    {
+                        foreach (var role in roles.EnumerateArray())
+                        {
+                            var roleName = role.GetString();
+                            if (!string.IsNullOrEmpty(roleName))
+                            {
+                                identity?.AddClaim(new Claim(ClaimTypes.Role, roleName));
+                            }
+                        }
+                    }
+                }
 
-builder.Services.AddAuthentication("Bearer")
-    .AddJwtBearer("Bearer", options =>
-    {
-        options.Authority = "http://localhost:8080/realms/myrealm";
-        options.RequireHttpsMetadata = false;
-        options.Audience = "my-app";
+                var resourceAccessClaim = identity?.FindFirst("resource_access");
+                if (resourceAccessClaim != null)
+                {
+                    var resourceAccess = System.Text.Json.JsonDocument.Parse(resourceAccessClaim.Value);
+                    if (resourceAccess.RootElement.TryGetProperty("account", out var accountObj) &&
+                        accountObj.TryGetProperty("roles", out var roles))
+                    {
+                        var resourceRoles = new List<string>();
+                        foreach (var role in roles.EnumerateArray())
+                        {
+                            var roleName = role.GetString();
+                            if (!string.IsNullOrEmpty(roleName))
+                            {
+                                resourceRoles.Add(roleName);
+                                identity?.AddClaim(new Claim(ClaimTypes.Role, roleName));
+                            }
+                        }
+                        context.HttpContext.Items["ResourceRoles"] = resourceRoles;
+                    }
+                }
+                return Task.CompletedTask;
+            },
+            OnAuthenticationFailed = context =>
+            {
+                Log.Error("Authentication failed: {Message}", context.Exception.Message);
+                return Task.CompletedTask;
+            }
+        };
     });
 
 builder.Services.AddAuthorization();
