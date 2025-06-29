@@ -75,13 +75,32 @@ public class AuthService(
         List<ErrorMessage> errors = new List<ErrorMessage>();
         var existingUser = await userRepo.FirstOrDefaultAsync(x => x.Username == registerRequest.Username);
 
-        if (existingUser is { IsVerified: true })
+        if (existingUser  != null)
         {
-            errors.Add(new ErrorMessage()
+            if (existingUser is { IsVerified: true })
             {
-                Code = 400,
-                Message = "Username already exists."
-            });
+                errors.Add(new ErrorMessage()
+                {
+                    Code = 400,
+                    Message = "Username already exists."
+                });
+            }
+            else
+            {
+                var verificationCode = verificationCodeRepo.Where(x => x.UserId == existingUser.Id).FirstOrDefault();
+                if (verificationCode is not null)
+                {
+                    if (DateTime.UtcNow < verificationCode.ExpiresAt)
+                    {
+                        var secondsRemaining = (verificationCode.ExpiresAt - DateTime.UtcNow).TotalSeconds;
+                        errors.Add(new ErrorMessage()
+                        {
+                            Code = 400,
+                            Message = $"Please wait {Math.Ceiling(secondsRemaining)} seconds before requesting a new code."
+                        });
+                    }
+                }
+            }
         }
 
         var user = new User
