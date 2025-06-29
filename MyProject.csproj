@@ -32,7 +32,11 @@
         <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
         <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
         <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
+        <PackageReference Include="Stimulsoft.Reports.Engine.NetCore" Version="2025.2.5" />
+        <PackageReference Include="Stimulsoft.Reports.Web.NetCore" Version="2025.2.5" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+        <PackageReference Include="System.Management" Version="10.0.0-preview.5.25277.114" />
+        <PackageReference Include="System.Security.Permissions" Version="10.0.0-preview.5.25277.114" />
     </ItemGroup>
 
     <ItemGroup>

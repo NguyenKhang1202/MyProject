@@ -15,6 +15,7 @@ using MyProject.Repos;
 using MyProject.Services;
 using MyProject.SignalR;
 using Serilog;
+using Stimulsoft.Report;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
@@ -114,7 +115,6 @@ Log.Logger = new LoggerConfiguration()
 builder.Host.UseSerilog();
 
 #endregion
-
 
 #region JWT Authorization
 
