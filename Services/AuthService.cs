@@ -75,7 +75,7 @@ public class AuthService(
         List<ErrorMessage> errors = new List<ErrorMessage>();
         var existingUser = await userRepo.FirstOrDefaultAsync(x => x.Username == registerRequest.Username);
 
-        if (existingUser != null)
+        if (existingUser is { IsVerified: true })
         {
             errors.Add(new ErrorMessage()
             {
@@ -95,10 +95,22 @@ public class AuthService(
         if (errors.Count == 0)
         {
             await using var transaction = await dbContext.Database.BeginTransactionAsync();
-            await userRepo.AddAsync(user);
-            await userRepo.SaveChangesAsync();
+            if (existingUser != null)
+            {
+                existingUser.Username = registerRequest.Username;
+                existingUser.DateOfBirth = registerRequest.DateOfBirth;
+                existingUser.PasswordHash = Crypto.HashPassword(registerRequest.Password);
+                userRepo.Update(existingUser);
+                await dbContext.SaveChangesAsync();
+            }
+            else
+            {
+                await userRepo.AddAsync(user);
+                await userRepo.SaveChangesAsync();
+            }
+
             var verificationCode = Generator.GenerateVerificationCode();
-            await CreateVerificationCodeAsync(user.Id, verificationCode, TimeSpan.FromMinutes(5));
+            await CreateVerificationCodeAsync(user.Id == 0 ? existingUser.Id : user.Id, verificationCode, TimeSpan.FromMinutes(5));
             await dbContext.SaveChangesAsync();
             await transaction.CommitAsync();
             await emailService.SendEmailAsync(new EmailRequest

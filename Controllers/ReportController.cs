@@ -6,12 +6,19 @@ using Stimulsoft.Report;
 
 namespace MyProject.Controllers;
 
-[Authorize]
+// [Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class ReportController(ILogger<ReportController> logger) : ControllerBase
 {
     private static string _userid = "userId";
+
+    // static ReportController()
+    // {
+    //     Stimulsoft.Base.StiLicense.Key = "6vJhGtLLLz2GNviWmUTrhSqnO...";
+    //     Stimulsoft.Base.StiLicense.LoadFromFile("license.key");
+    //     Stimulsoft.Base.StiLicense.LoadFromStream(stream);
+    // }
 
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

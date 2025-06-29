@@ -120,11 +120,11 @@ public class AuthController(IConfiguration configuration,
     }
     
     [HttpPost("verify-code")]
-    public async Task<IActionResult> VerifyCode(string code, string email)
+    public async Task<IActionResult> VerifyCode([FromBody] VerifyCodeRequestDto dto)
     {
         return await ControllerHelper.TryCatchAsync(this, "VerifyCode", async () =>
         {
-            var result = await authService.VerifyCodeAsync(code, email);
+            var result = await authService.VerifyCodeAsync(dto.Code, dto.Email);
             if (result.IsSuccess is false)
             {
                 return BadRequest(result.ErrorMessages);
