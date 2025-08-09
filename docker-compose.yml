@@ -7,11 +7,32 @@ services:
       dockerfile: Dockerfile
     container_name: my-project
     ports:
-      - "5079:5079"
-      - "7054:7054"
+      - "12000:12000"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
     depends_on:
-      - db
+      - mysql
     networks:
       - my_network
+  mysql:
+    image: mysql:8.0
+    container_name: mysql_db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: mydatabase_migration
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: 123
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init-scripts:/docker-entrypoint-initdb.d:ro
+    networks:
+      - my_network
+
+volumes:
+  mysql_data:
+
+networks:
+  my_network:
+    driver: bridge
