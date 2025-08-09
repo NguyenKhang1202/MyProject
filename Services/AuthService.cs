@@ -23,6 +23,7 @@ public class AuthService(
     EmailService emailService,
     IHttpContextAccessor httpContext,
     IConfiguration configuration,
+    ILogger<AuthService> logger,
     MyDbContext dbContext): IAuthService
 {
     public async Task<ApiResponse<LoginResponseDto>> SignIn(LoginRequest loginRequest)
@@ -132,12 +133,19 @@ public class AuthService(
             await CreateVerificationCodeAsync(user.Id == 0 ? existingUser.Id : user.Id, verificationCode, TimeSpan.FromMinutes(5));
             await dbContext.SaveChangesAsync();
             await transaction.CommitAsync();
-            await emailService.SendEmailAsync(new EmailRequest
+            try
             {
-                ToEmail = registerRequest.Email,
-                Subject = "Your Verification Code",
-                Body = $"<p>Your verification code is: <strong>{verificationCode}</strong></p>",
-            });
+                await emailService.SendEmailAsync(new EmailRequest
+                {
+                    ToEmail = registerRequest.Email,
+                    Subject = "Your Verification Code",
+                    Body = $"<p>Your verification code is: <strong>{verificationCode}</strong></p>",
+                });
+            }
+            catch (Exception e)
+            {
+                logger.LogError("Eror sending verification email: {Message}", e.Message);
+            }
         }
 
         return errors;
