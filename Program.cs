@@ -20,6 +20,11 @@ using Stimulsoft.Report;
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
 
+builder.WebHost.UseKestrel().UseContentRoot(Directory.GetCurrentDirectory()).ConfigureKestrel((context, options) =>
+{
+    options.Configure(context.Configuration.GetSection("Kestrel"));
+});
+
 builder.Services.AddControllers(options =>
 {
     // options.Filters.Add<GlobalProducesResponseTypeFilter>();
@@ -225,11 +230,10 @@ var app = builder.Build();
 app.MapHub<ChatHub>("/chatHub");
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+
+// chạy swagger cho tất cả môi trường
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 
