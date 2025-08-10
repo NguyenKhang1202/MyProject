@@ -25,6 +25,15 @@ builder.WebHost.UseKestrel().UseContentRoot(Directory.GetCurrentDirectory()).Con
     options.Configure(context.Configuration.GetSection("Kestrel"));
 });
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll",
+        policy => policy
+            .AllowAnyOrigin() // Cho phép tất cả domain, hoặc dùng .WithOrigins("https://example.com")
+            .AllowAnyMethod()
+            .AllowAnyHeader());
+});
+
 builder.Services.AddControllers(options =>
 {
     // options.Filters.Add<GlobalProducesResponseTypeFilter>();
@@ -226,6 +235,8 @@ builder.Services.AddAuthorization();
 #endregion
 
 var app = builder.Build();
+
+app.UseCors("AllowAll");
 
 app.MapHub<ChatHub>("/chatHub");
 
